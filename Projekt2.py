@@ -1,7 +1,9 @@
+from operator import setitem
+
 import numpy as np
 import math
 import matplotlib.pyplot as plt
-from pandas.core.indexers import validate_indices
+
 
 
 # Pętla while dla poprawności wejścia użytkownika
@@ -83,39 +85,96 @@ def rzut(a):
     elif a == math.pi / 2:
         return "RZUT PIONOWY"
 
-
-# Pobranie wartości od użytkownika
+                    # Pobranie wartości od użytkownika
 wynik_m = masa()
 wynik_g = przyspieszenie()
 wynik_v = predkosc()
 wynik_a = alfa()
 wynik_h0 = wysokosc()
 
-# Obliczenie zasięgu rzutu
-if isinstance(wynik_g, float) and isinstance(wynik_v, float) and isinstance(wynik_a, float):
-    z = (wynik_v ** 2 * np.sin(2 * wynik_a)) / wynik_g
-else:
-    z = None
+
+t_w = None
+h_max = None
+t_k = None
+                # rysowanie wykresu  dla rzutu ukosnego
+if 0 < wynik_a < math.pi / 2:
+            # Obliczenie zasięgu rzutu dla h_0 wieksze od 0
+    if wynik_h0 > 0:
+        if isinstance(wynik_h0, float) and isinstance(wynik_v, float) and isinstance(wynik_a, float) and isinstance(wynik_g, float):
+            h_max = wynik_h0 + (((wynik_v ** 2) * (np.sin(wynik_a) ** 2)) / (2 * wynik_g))
+        else:
+            h_max = None
+        if isinstance(wynik_g, float) and isinstance(wynik_v, float) and isinstance(wynik_a, float):
+            z = ((wynik_v ** 2) * np.sin(wynik_a) * np.cos(wynik_a) / wynik_g) + (wynik_v * np.cos(wynik_a) * np.sqrt((2 * h_max) / wynik_g))
+        else:
+            z = None
+    elif wynik_h0 == 0:
+        if isinstance(wynik_g, float) and isinstance(wynik_v, float) and isinstance(wynik_a, float):
+            z = (wynik_v ** 2 * np.sin(2 * wynik_a)) / wynik_g
+        else:
+            z = None
+    else:
+        z = None
+                #czas wznoszenia dla rzutu ukośnego
+    if isinstance(wynik_v, float) and isinstance(wynik_g, float) and isinstance(wynik_a, float):
+        t_w = (wynik_v * np.sin(wynik_a)) / wynik_g
+    if isinstance(wynik_v, float) and isinstance(wynik_g, float) and isinstance(wynik_a, float):
+        t_k = ((wynik_v * np.sin(wynik_a))/wynik_g) + np.sqrt((2 * h_max)/wynik_g)
+
+
+
+
+                #rysowanie wykresu dla rzutu poziomego
+t_s = None
+if wynik_a == 0:
+    if wynik_h0 > 0:
+        if isinstance(wynik_g, float) and isinstance(wynik_v, float) and isinstance(wynik_h0,float):
+            z = wynik_v * np.sqrt((2 * wynik_h0) / wynik_g)
+    else:
+            z = None
+                            #czas spadku
+if isinstance(wynik_g, float) and isinstance(wynik_h0, float):
+    t_s = np.sqrt((2*wynik_h0)/ wynik_g)
+
+
+
 
 # Wyświetlanie wyników w konsoli
 print("\n--- WYNIKI OBLICZEŃ ---")
 print(f"Masa obiektu: {wynik_m} kg")
-print(f"Przyspieszenie ziemskie: {wynik_g} m/s^2")
+print(f"Przyspieszenie: {wynik_g} m/s^2")
 print(f"Prędkość początkowa: {wynik_v} m/s")
 print(f"Kąt alfa: {math.degrees(wynik_a):.2f}° ({wynik_a:.4f} rad)")
 print(f"Wysokość początkowa: {wynik_h0} m")
 print(f"Rodzaj rzutu: {rzut(wynik_a)}")
+if t_s is not None:
+    print(f"Czas spadku: {t_s} s")
+if h_max is not None:
+    print(f"Wysokosc maksymalna: {h_max} m")
+else:
+    print(f"Wysokość maksymalna równa sie wysokości początkowej: {wynik_h0} m")
 
 if z is not None:
     print(f"Zasięg rzutu: {z:.2f} m")
 
+if t_w is not None:
+    print(f"Czas wznoszenia: {t_w} s")
+if t_k is not None:
+    print(f"Czas spadku: {t_k} s")
+
+
 # Obliczenie toru lotu i wykres
 if z is not None:
-    x = np.linspace(0, z, 500)  # Więcej punktów dla płynności wykresu
-    y = (x * np.tan(wynik_a)) - ((wynik_g * x ** 2) / (2 * (wynik_v ** 2) * (np.cos(wynik_a) ** 2)))
+    if wynik_a == 0:
+        x = np.linspace(0, z, 500)
+        y = wynik_h0 - ((wynik_g * x**2)/2*wynik_v**2)
 
-    # Dodanie wysokości początkowej
-    y += wynik_h0
+    if wynik_h0 == 0:
+        x = np.linspace(0, z, 500)  # Więcej punktów dla płynności wykresu
+        y = (x * np.tan(wynik_a)) - ((wynik_g * x ** 2) / (2 * (wynik_v ** 2) * (np.cos(wynik_a) ** 2)))
+    elif wynik_h0 > 0:
+        x = np.linspace(0, z,500)
+        y = wynik_h0 + (x * np.tan(wynik_a)) - ((wynik_g * (x ** 2)) / (2 * (wynik_v ** 2) * (np.cos(wynik_a) ** 2)))
 
     # Filtrowanie wartości y >= 0 (żeby wykres nie wychodził poniżej ziemi)
     valid_indices = y >= 0
@@ -125,6 +184,8 @@ if z is not None:
     # Rysowanie wykresu
     plt.figure(figsize=(10, 6))
     plt.plot(x, y, color='g', label="Tor ruchu")
+    plt.scatter(0, wynik_h0, color='red', label="Punkt Startowy")
+    plt.scatter(z,0, color='blue', label="Punkt Końcowy")
     plt.axhline(0, color='black', linewidth=0.5, linestyle='--')  # Linia ziemi
     plt.title("Tor rzutu")
     plt.xlabel("Odległość (m)")
