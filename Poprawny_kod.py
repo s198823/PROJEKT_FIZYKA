@@ -146,7 +146,7 @@ def rysuj_pionowy(t, h, wynik_h0):
     plt.plot(x, h, label="Tor ruchu pionowego", color="g")
     plt.scatter(0, wynik_h0, color='red', label="Punkt startowy")
     plt.axhline(0, color='black', linewidth=0.5, linestyle='--')  # Poziom ziemi
-    plt.title("Rzut pionowy pod kątem 90° z wysokości 10 m")
+    plt.title("Tor rzutu pionowego")
     plt.xlabel("Odległość (m)")
     plt.ylabel("Wysokość (m)")
     plt.legend()
